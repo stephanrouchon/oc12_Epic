@@ -1,0 +1,6 @@
+/venv
+/secrets.py
+/my_secrets.py
+/.token
+/flake-report
+/.env

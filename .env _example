@@ -1,0 +1,13 @@
+# --- Base-de-donnees-PostGreSQL ---
+
+DB_HOST=nom_serveur
+DB_PORT=port
+DB_NAME=nom_de_la_bdd
+DB_USER=nom_admin_bdd
+DB_PASSWORD=password
+
+# --- Config JWT --- 
+
+JWT_SECRET_KEY=ta_clé_secrete
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_SECONDS=3600
