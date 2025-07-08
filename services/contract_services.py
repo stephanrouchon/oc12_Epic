@@ -27,7 +27,11 @@ class ContractService:
         try:
             self.contract_dao.create_contract(contract_data)
             return True, "Le contrat a été crée"
-        except Exception:
+        except Exception as e:
+
+            log_exception(e,{
+                "action":"create-contract"
+            })
             return False, "Erreur lors de la création."
 
     def update_contract(self, contract_id,
@@ -96,7 +100,13 @@ class ContractService:
                 return True, contracts, "Contrats récupérés"
             else:
                 return True, [], "Aucun contrats trouvés"
-        except Exception:
+        except Exception as e:
+
+            log_exception(e, {
+                "action":"get_contact_list",
+                'contracts':contracts
+                
+            })
             return False, [], "Erreur lors de la récupération"
 
     def get_contract_list_not_sign(self):
@@ -106,7 +116,11 @@ class ContractService:
                 return True, contracts, "Contrats récupérés"
             else:
                 return True, [], "Aucun contrats non signés trouvés"
-        except Exception:
+        except Exception as e:
+
+            log_exception(e , {
+                "action":"get_contracts_not_sign",
+            })
             return False, [], "Erreur lors de la récupération"
 
     def get_contract_list_not_fully_paid(self):
@@ -116,5 +130,9 @@ class ContractService:
                 return True, contracts, "Contrats récupérés"
             else:
                 return True, [], "Tous les contrats ont étés entièrement payés"
-        except Exception:
+        except Exception as e:
+
+            log_exception(e, {
+                "action":"get_contracts_not_fully_paid",
+            })
             return False, [], "Erreur lors de la récupération"

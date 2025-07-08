@@ -4,3 +4,4 @@
 /.token
 /flake-report
 /.env
+/htmlcov

@@ -3,6 +3,7 @@ from database.dao.event_dao import EventDAO
 from database.dao.user_dao import UserDAO
 from database.database import engine
 from services.auth_service import get_current_user_info
+from services.sentry_service import log_exception
 
 
 class EventService:
@@ -45,6 +46,9 @@ class EventService:
             self.event_dao.create_event(event_data)
             return True, "L'évènement a été crée"
         except Exception as e:
+            log_exception(e,{
+                "action":"create_event"
+            })
             return False, f"erreur lors de la création : {str(e)}"
 
     def update_event(self,
@@ -96,7 +100,7 @@ class EventService:
                         value = int(value)
                         if value <= 0:
                             return False, "Le nombre de participants doit être un entier positif"
-                    except (ValueError, TypeError):
+                    except (ValueError, TypeError) as e:
                         return False, "Le nombre de participants doit être un nombre entier valide"
                 
                 update_data[field] = value
@@ -111,6 +115,9 @@ class EventService:
             else:
                 return False, "Aucun événement trouvé avec cet ID"
         except Exception as e:
+            log_exception(e, {
+                "action":"update_event"
+            })
             return False, f"Erreur lors de la mise à jour de l'événement : {str(e)}"
 
     def get_events_by_support_contact_id(self):
@@ -137,4 +144,7 @@ class EventService:
             else:
                 return True, [], "Aucun événement attribué"
         except Exception as e:
+            log_exception(e, {
+                "action":"get_events_by_support_contact_id"
+            })
             return False, [], f"Erreur lors de la récupération : {str(e)}"

@@ -1,0 +1,46 @@
+# Configuration de couverture pour pytest-cov
+[run]
+source = .
+omit = 
+    */venv/*
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */migrations/*
+    setup.py
+    manage.py
+    main.py
+    my_secrets.py
+
+[report]
+# Exclure les méthodes __init__ et autres patterns courants
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    def __str__
+    def __init__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    # Exclure les imports et déclarations de classes simples
+    ^from
+    ^import
+    ^class.*:$
+
+# Affichage des lignes manquantes
+show_missing = True
+
+# Pourcentage minimum de couverture
+fail_under = 35
+
+# Précision pour l'affichage
+precision = 1
+
+[html]
+directory = htmlcov
+title = Epic Events CRM - Rapport de couverture

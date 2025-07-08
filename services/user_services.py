@@ -46,7 +46,8 @@ class UserService:
             # Récupérer le nom du département
             from database.dao.departement_dao import DepartementDAO
             dept_dao = DepartementDAO(engine)
-            dept_name = dept_dao.get_departement_name_by_id(None, departement_id)
+            dept_result = dept_dao.get_departement_by_id(departement_id)
+            dept_name = dept_result.name if dept_result else "Unknown"
             
             log_user_creation(
                 user_id=user_id,

@@ -29,16 +29,14 @@ def sentry_exception_handler(func_name=None):
                 return func(*args, **kwargs)
             except Exception as e:
                 # Journaliser l'exception avec le contexte
-                sentry_sdk.capture_exception(
-                    e,
-                    extra={
-                        "function_name": func_name or func.__name__,
-                        "function_module": func.__module__,
-                        "args": str(args) if args else None,
-                        "kwargs": str(kwargs) if kwargs else None,
-                        "event_type": "unexpected_exception"
-                    }
-                )
+                sentry_sdk.set_tag("event_type", "unexpected_exception")
+                sentry_sdk.set_context("function_details", {
+                    "function_name": func_name or func.__name__,
+                    "function_module": func.__module__,
+                    "args": str(args) if args else None,
+                    "kwargs": str(kwargs) if kwargs else None
+                })
+                sentry_sdk.capture_exception(e)
                 # Re-lever l'exception pour que le comportement normal continue
                 raise
         return wrapper
@@ -46,69 +44,72 @@ def sentry_exception_handler(func_name=None):
 
 def log_user_creation(user_id, username, departement, created_by):
     """Journalise la création d'un utilisateur"""
+    sentry_sdk.set_tag("event_type", "user_creation")
+    sentry_sdk.set_tag("action", "create_user")
+    sentry_sdk.set_context("user_details", {
+        "user_id": user_id,
+        "username": username,
+        "departement": departement,
+        "created_by": created_by
+    })
+        
     sentry_sdk.capture_message(
         f"Création d'utilisateur: {username} (ID: {user_id}) dans le département {departement}",
-        level="info",
-        extra={
-            "event_type": "user_creation",
-            "user_id": user_id,
-            "username": username,
-            "departement": departement,
-            "created_by": created_by,
-            "action": "create_user"
-        }
+        level="info"
     )
 
 def log_user_update(user_id, username, updated_fields, updated_by):
     """Journalise la modification d'un utilisateur"""
+    sentry_sdk.set_tag("event_type", "user_update")
+    sentry_sdk.set_tag("action", "update_user")
+    sentry_sdk.set_context("user_update_details", {
+        "user_id": user_id,
+        "username": username,
+        "updated_fields": updated_fields,
+        "updated_by": updated_by
+    })
+    
     sentry_sdk.capture_message(
         f"Modification d'utilisateur: {username} (ID: {user_id}). Champs modifiés: {', '.join(updated_fields)}",
-        level="info",
-        extra={
-            "event_type": "user_update",
-            "user_id": user_id,
-            "username": username,
-            "updated_fields": updated_fields,
-            "updated_by": updated_by,
-            "action": "update_user"
-        }
+        level="info"
     )
 
 def log_contract_signature(contract_id, client_name, amount, signed_by):
     """Journalise la signature d'un contrat"""
+    sentry_sdk.set_tag("event_type", "contract_signature")
+    sentry_sdk.set_tag("action", "sign_contract")
+    sentry_sdk.set_context("contract_details", {
+        "contract_id": contract_id,
+        "client_name": client_name,
+        "amount": amount,
+        "signed_by": signed_by
+    })
+    
     sentry_sdk.capture_message(
         f"Signature de contrat: Contrat ID {contract_id} pour {client_name} d'un montant de {amount}€",
-        level="info",
-        extra={
-            "event_type": "contract_signature",
-            "contract_id": contract_id,
-            "client_name": client_name,
-            "amount": amount,
-            "signed_by": signed_by,
-            "action": "sign_contract"
-        }
+        level="info"
     )
 
 def log_event_create(event_id, client_name, contract_id, signed_by):
     """Journalise la création d'un event"""
+    sentry_sdk.set_tag("event_type", "event_creation")
+    sentry_sdk.set_tag("action", "event_create")
+    sentry_sdk.set_context("event_details", {
+        "event_id": event_id,
+        "client_name": client_name,
+        "contract_id": contract_id,
+        "signed_by": signed_by
+    })
+    
     sentry_sdk.capture_message(
         f"Création d'un évènement: Event ID: {event_id} pour {client_name} pour le contrat {contract_id}",
-        level="info",
-        extras={
-            "event_type": "Création d'un événement",
-            "event_id": event_id,
-            "client_name": client_name,
-            "signed_by": signed_by,
-            "action": "Event_create"
-        }
+        level="info"
     )
 
 def log_exception(exception, context=None):
     """Journalise une exception inattendue"""
-    sentry_sdk.capture_exception(
-        exception,
-        extra={
-            "event_type": "unexpected_exception",
-            "context": context or {}
-        }
-    )
+    sentry_sdk.set_tag("event_type", "unexpected_exception")
+    if context:
+        sentry_sdk.set_context("error_context", context)
+        
+    sentry_sdk.capture_exception(exception)

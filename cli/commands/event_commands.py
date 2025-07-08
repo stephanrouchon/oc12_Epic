@@ -172,7 +172,7 @@ def event_update(event_id):
     click.echo(message)
 
 @event.command(name="assigned-events")
-@require_departement("Gestion")
+@require_departement("Gestion", "Support")
 def get_assign_events_by_support_contact_id():
     
     event_service = EventService()

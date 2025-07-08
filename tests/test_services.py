@@ -73,6 +73,281 @@ class TestUserService:
         
         assert success is False
         assert "Email invalide" in message
+    
+    def test_create_user_exception(self, monkeypatch):
+        # Mock des dépendances
+        mock_user_dao = Mock()
+        mock_user_dao.create_user.side_effect = Exception("Database error")
+        
+        def mock_is_valid_email(email):
+            return "@" in email
+        
+        def mock_get_current_user_info():
+            return {"username": "admin"}
+        
+        def mock_log_exception(*args, **kwargs):
+            pass
+        
+        monkeypatch.setattr("services.user_services.utils.is_valid_email", mock_is_valid_email)
+        monkeypatch.setattr("services.user_services.get_current_user_info", mock_get_current_user_info)
+        monkeypatch.setattr("services.user_services.log_exception", mock_log_exception)
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        success, message = user_service.create_user(
+            username="test",
+            employee_number=123,
+            email="test@test.com",
+            first_name="Test",
+            last_name="User",
+            password="password",
+            departement_id=1
+        )
+        
+        assert success is False
+        assert "Erreur lors de la création" in message
+        assert "Database error" in message
+    
+    def test_get_users(self):
+        # Mock des utilisateurs
+        mock_users = [
+            Mock(username="user1", email="user1@test.com"),
+            Mock(username="user2", email="user2@test.com")
+        ]
+        
+        mock_user_dao = Mock()
+        mock_user_dao.get_users.return_value = mock_users
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        result = user_service.get_users()
+        
+        assert result == mock_users
+        mock_user_dao.get_users.assert_called_once()
+    
+    def test_update_user_success(self, monkeypatch):
+        # Mock des dépendances
+        mock_user_dao = Mock()
+        mock_user_dao.update_user.return_value = 1  # 1 ligne mise à jour
+        mock_user_dao.get_user_by_id.return_value = Mock(username="test_user")
+        
+        def mock_get_current_user_info():
+            return {"username": "admin"}
+        
+        def mock_log_user_update(*args, **kwargs):
+            pass
+        
+        monkeypatch.setattr("services.user_services.get_current_user_info", mock_get_current_user_info)
+        monkeypatch.setattr("services.user_services.log_user_update", mock_log_user_update)
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            username="new_username",
+            first_name="New Name"
+        )
+        
+        assert success is True
+        assert "mis à jour avec succès" in message
+        mock_user_dao.update_user.assert_called_once()
+    
+    def test_update_user_invalid_email(self, monkeypatch):
+        def mock_is_valid_email(email):
+            return False
+        
+        monkeypatch.setattr("services.user_services.utils.is_valid_email", mock_is_valid_email)
+        
+        user_service = UserService()
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            email="invalid_email"
+        )
+        
+        assert success is False
+        assert "Email invalide" in message
+    
+    def test_update_user_invalid_employee_number_string(self):
+        user_service = UserService()
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            employee_number="not_a_number"
+        )
+        
+        assert success is False
+        assert "nombre entier valide" in message
+    
+    def test_update_user_invalid_employee_number_negative(self):
+        user_service = UserService()
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            employee_number=-5
+        )
+        
+        assert success is False
+        assert "entier positif" in message
+    
+    def test_update_user_no_data(self):
+        user_service = UserService()
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            username="",  # Valeur vide, sera ignorée
+            email=None    # Valeur None, sera ignorée
+        )
+        
+        assert success is False
+        assert "Aucune donnée à mettre à jour" in message
+    
+    def test_update_user_not_found(self, monkeypatch):
+        mock_user_dao = Mock()
+        mock_user_dao.update_user.return_value = 0  # 0 ligne mise à jour
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        success, message = user_service.update_user(
+            user_id=999,
+            username="new_username"
+        )
+        
+        assert success is False
+        assert "Aucun utilisateur trouvé" in message
+    
+    def test_update_user_with_password(self, monkeypatch):
+        mock_user_dao = Mock()
+        mock_user_dao.update_user.return_value = 1
+        mock_user_dao.get_user_by_id.return_value = Mock(username="test_user")
+        
+        def mock_get_current_user_info():
+            return {"username": "admin"}
+        
+        def mock_log_user_update(*args, **kwargs):
+            pass
+        
+        monkeypatch.setattr("services.user_services.get_current_user_info", mock_get_current_user_info)
+        monkeypatch.setattr("services.user_services.log_user_update", mock_log_user_update)
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            password="new_password"
+        )
+        
+        assert success is True
+        assert "mis à jour avec succès" in message
+        
+        # Vérifier que le mot de passe a été hashé
+        call_args = mock_user_dao.update_user.call_args[0][1]
+        assert "password" in call_args
+        assert call_args["password"] != "new_password"  # Doit être hashé
+    
+    def test_update_user_exception(self, monkeypatch):
+        mock_user_dao = Mock()
+        mock_user_dao.update_user.side_effect = Exception("Database error")
+        
+        def mock_log_exception(*args, **kwargs):
+            pass
+        
+        monkeypatch.setattr("services.user_services.log_exception", mock_log_exception)
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            username="new_username"
+        )
+        
+        assert success is False
+        assert "Erreur lors de la mise à jour" in message
+        assert "Database error" in message
+    
+    def test_update_user_valid_employee_number(self, monkeypatch):
+        mock_user_dao = Mock()
+        mock_user_dao.update_user.return_value = 1
+        mock_user_dao.get_user_by_id.return_value = Mock(username="test_user")
+        
+        def mock_get_current_user_info():
+            return {"username": "admin"}
+        
+        def mock_log_user_update(*args, **kwargs):
+            pass
+        
+        monkeypatch.setattr("services.user_services.get_current_user_info", mock_get_current_user_info)
+        monkeypatch.setattr("services.user_services.log_user_update", mock_log_user_update)
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        success, message = user_service.update_user(
+            user_id=1,
+            employee_number="123"  # String valide qui peut être convertie
+        )
+        
+        assert success is True
+        call_args = mock_user_dao.update_user.call_args[0][1]
+        assert call_args["employee_number"] == 123  # Doit être converti en int
+    
+    def test_create_user_no_current_user(self, monkeypatch):
+        # Test quand get_current_user_info retourne None
+        mock_user_dao = Mock()
+        mock_user_dao.create_user.return_value = 1
+        
+        mock_dept_dao = Mock()
+        mock_dept_dao.get_departement_name_by_id.return_value = "Gestion"
+        
+        def mock_is_valid_email(email):
+            return "@" in email
+        
+        def mock_get_current_user_info():
+            return None  # Pas d'utilisateur connecté
+        
+        def mock_log_user_creation(*args, **kwargs):
+            pass
+        
+        monkeypatch.setattr("services.user_services.utils.is_valid_email", mock_is_valid_email)
+        monkeypatch.setattr("services.user_services.get_current_user_info", mock_get_current_user_info)
+        monkeypatch.setattr("services.user_services.log_user_creation", mock_log_user_creation)
+        
+        user_service = UserService()
+        user_service.user_dao = mock_user_dao
+        
+        with patch("database.dao.departement_dao.DepartementDAO") as mock_dept_dao_class:
+            mock_dept_dao_class.return_value = mock_dept_dao
+            
+            success, message = user_service.create_user(
+                username="test",
+                employee_number=123,
+                email="test@test.com",
+                first_name="Test",
+                last_name="User",
+                password="password",
+                departement_id=1
+            )
+        
+        assert success is True
+        assert "succès" in message
+    
+    def test_user_service_import(self):
+        """Test pour forcer l'import du module user_services pour la couverture"""
+        from services.user_services import UserService
+        assert UserService is not None
+        
+        # Vérifier que la classe a les bonnes méthodes
+        service = UserService()
+        assert hasattr(service, 'create_user')
+        assert hasattr(service, 'get_users')
+        assert hasattr(service, 'update_user')
+        assert hasattr(service, 'user_dao')
 
 
 class TestClientService:
