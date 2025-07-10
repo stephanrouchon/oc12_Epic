@@ -50,10 +50,11 @@ def create():
     departement = click.prompt("Département",
                                click.Choice(departement_names))
     departement_id = get_departement_id_by_name(departement)
-    
+
     # Vérification que le département a été trouvé
     if departement_id is None:
-        click.echo(f"❌ Erreur : Le département '{departement}' n'a pas été trouvé.")
+        click.echo(f"❌ Erreur : Le département '{departement}'\
+                    n'a pas été trouvé.")
         return
 
     user_service = UserService()

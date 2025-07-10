@@ -51,17 +51,20 @@ def create(contract_id,
 
 @event.command(name='update')
 @require_departement("Gestion", "Support")
-@click.option('--event-id', type=int, prompt=True, help="Entrez l'id de l'évenement")
+@click.option('--event-id',
+              type=int, prompt=True,
+              help="Entrez l'id de l'évenement")
 def event_update(event_id):
     """Mettre à jour un évènement existant"""
-    
 
     click.echo(f"Mise à jour de l'événement ID: {event_id}")
-    click.echo("Laissez vide les champs que vous ne voulez pas modifier")
+    click.echo("Laissez vide les champs que \
+               vous ne voulez pas modifier")
 
     # Validation de la date de début
     start_date = None
-    start_date_input = click.prompt("Nouvelle date de début (YYYY-MM-DD HH:MM:SS ou YYYY-MM-DD)",
+    start_date_input = click.prompt("Nouvelle date de début \
+                                    (YYYY-MM-DD HH: MM: SS ou YYYY-MM-DD)",
                                     default="", show_default=False)
     if start_date_input.strip():
         while True:
@@ -70,20 +73,22 @@ def event_update(event_id):
                 if len(start_date_input.strip()) == 10:  # Format YYYY-MM-DD
                     start_date = datetime.strptime(
                         start_date_input.strip(), "%Y-%m-%d")
-                else:  # Format YYYY-MM-DD HH:MM:SS
+                else:  # Format YYYY-MM-DD HH: MM: SS
                     start_date = datetime.strptime(
                         start_date_input.strip(), "%Y-%m-%d %H:%M:%S")
                 break
             except ValueError:
                 click.echo(
-                    "Format de date invalide. Utilisez YYYY-MM-DD ou YYYY-MM-DD HH:MM:SS")
+                    "Format de date invalide. Utilisez YYYY-MM-DD ou\
+                         YYYY-MM-DD HH: MM: SS")
                 start_date_input = click.prompt("Nouvelle date de début")
                 if not start_date_input.strip():
                     break
 
     # Validation de la date de fin
     end_date = None
-    end_date_input = click.prompt("Nouvelle date de fin (YYYY-MM-DD HH:MM:SS ou YYYY-MM-DD)",
+    end_date_input = click.prompt("Nouvelle date de fin (YYYY-MM-DD HH: \
+                                  MM: SS ou YYYY-MM-DD)",
                                   default="", show_default=False)
     if end_date_input.strip():
         while True:
@@ -92,14 +97,15 @@ def event_update(event_id):
                 if len(end_date_input.strip()) == 10:  # Format YYYY-MM-DD
                     end_date = datetime.strptime(
                         end_date_input.strip(), "%Y-%m-%d")
-                else:  # Format YYYY-MM-DD HH:MM:SS
+                else:  # Format YYYY-MM-DD HH: MM: SS
                     end_date = datetime.strptime(
                         end_date_input.strip(), "%Y-%m-%d %H:%M:%S")
 
                 # Vérifier que la date de fin est après la date de début
                 if start_date and end_date <= start_date:
                     click.echo(
-                        "La date de fin doit être postérieure à la date de début")
+                        "La date de fin doit être postérieure\
+                            à la date de début")
                     end_date_input = click.prompt("Nouvelle date de fin")
                     if not end_date_input.strip():
                         end_date = None
@@ -108,7 +114,8 @@ def event_update(event_id):
                 break
             except ValueError:
                 click.echo(
-                    "Format de date invalide. Utilisez YYYY-MM-DD ou YYYY-MM-DD HH:MM:SS")
+                    "Format de date invalide. Utilisez YYYY-MM-DD ou\
+                        YYYY-MM-DD HH: MM: SS")
                 end_date_input = click.prompt("Nouvelle date de fin")
                 if not end_date_input.strip():
                     break
@@ -123,7 +130,8 @@ def event_update(event_id):
                 attendees = int(attendees_input)
                 if attendees <= 0:
                     click.echo(
-                        "Le nombre de participants doit être un entier positif")
+                        "Le nombre de participants doit \
+                            être un entier positif")
                     attendees_input = click.prompt(
                         "Nouveau nombre de participants")
                     if not attendees_input.strip():
@@ -162,7 +170,8 @@ def event_update(event_id):
         try:
             update_data["support_contact_id"] = int(support_contact_id)
         except ValueError:
-            click.echo("L'ID du responsable support doit être un nombre entier")
+            click.echo("L'ID du responsable support \
+                       doit être un nombre entier")
             return
 
     # Appel du service
@@ -171,18 +180,21 @@ def event_update(event_id):
 
     click.echo(message)
 
+
 @event.command(name="assigned-events")
 @require_departement("Gestion", "Support")
 def get_assign_events_by_support_contact_id():
-    
+
     event_service = EventService()
     success, events, message = event_service.get_events_by_support_contact_id()
 
     if success:
         if events:
             for event in events:
-                print(f"Evenement ID: {event.id}  date de début: {event.start_date}" 
-                      f"Date de fin : {event.end_date} nombre de personnes : {event.attendees}"
+                print(f"Evenement ID: {event.id} "
+                      f"date de début: {event.start_date}"
+                      f"Date de fin : {event.end_date}"
+                      f"nombre de personnes : {event.attendees}"
                       f"Lieu: {event.location}")
         else:
             click.echo("Aucun événément affecté")

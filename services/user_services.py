@@ -2,7 +2,9 @@ from argon2 import PasswordHasher
 from database.dao.user_dao import UserDAO
 from database.database import engine
 from services import utils
-from services.sentry_service import log_user_creation, log_user_update, log_exception
+from services.sentry_service import (log_user_creation,
+                                     log_user_update,
+                                     log_exception)
 from services.auth_service import get_current_user_info
 
 
@@ -57,9 +59,11 @@ class UserService:
 
         Note:
             - Le mot de passe est automatiquement haché avec Argon2
-            - La création est journalisée avec l'utilisateur courant comme créateur
+            - La création est journalisée avec l'utilisateur courant comme
+            créateur
             - Le département doit exister dans la base de données
-            - Les contraintes d'unicité (username, email, employee_number) sont vérifiées
+            - Les contraintes d'unicité (username,
+                    email, employee_number) sont vérifiées
             - Toutes les erreurs sont automatiquement loggées dans Sentry
         """
 
@@ -81,24 +85,27 @@ class UserService:
 
         try:
             user_id = self.user_dao.create_user(user_data)
-            
+
             # Journaliser la création d'utilisateur dans Sentry
             current_user = get_current_user_info()
-            created_by = current_user.get("username", "Unknown") if current_user else "System"
-            
+            created_by = (current_user.get("username",
+                                           "Unknown")
+                          if current_user
+                          else "System")
+
             # Récupérer le nom du département
             from database.dao.departement_dao import DepartementDAO
             dept_dao = DepartementDAO(engine)
             dept_result = dept_dao.get_departement_by_id(departement_id)
             dept_name = dept_result.name if dept_result else "Unknown"
-            
+
             log_user_creation(
                 user_id=user_id,
                 username=username,
                 departement=dept_name or "Unknown",
                 created_by=created_by
             )
-            
+
             return True, "L'utilisateur a été crée avec succès"
         except Exception as e:
             # Journaliser l'exception inattendue
@@ -148,19 +155,23 @@ class UserService:
             if rows_updated > 0:
                 # Journaliser la modification d'utilisateur
                 current_user = get_current_user_info()
-                updated_by = current_user.get("username", "Unknown") if current_user else "System"
-                
+                updated_by = (current_user.get("username",
+                                               "Unknown")
+                              if current_user
+                              else "System")
+
                 # Récupérer le nom d'utilisateur de celui qui est modifié
                 updated_user = self.user_dao.get_user_by_id(user_id)
-                username = updated_user.username if updated_user else f"User-{user_id}"
-                
+                username = (updated_user.username if updated_user
+                            else f"User-{user_id}")
+
                 log_user_update(
                     user_id=user_id,
                     username=username,
                     updated_fields=list(update_data.keys()),
                     updated_by=updated_by
                 )
-                
+
                 return True, "Utilisateur mis à jour avec succès"
             else:
                 return False, "Aucun utilisateur trouvé avec cet ID"

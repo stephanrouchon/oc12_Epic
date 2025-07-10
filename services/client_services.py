@@ -27,7 +27,7 @@ class ClientService:
             commercial_id (int): id du commercial assigné_
 
         Returns:
-            tupple: 
+            tupple:
                 success (bool): True if client is created, False else
                 message (str): Message de résultat
         """
@@ -51,18 +51,18 @@ class ClientService:
             return True, "Le client a été crée"
         except Exception as e:
             log_exception(e, {
-                "action":"create_user",
+                "action": "create_user",
             })
             return False, "erreur lors de la création"
 
     def get_clients(self):
         """retourne la liste des clients
-        
+
         Returns:
             tuple: (success, message)
                 - success (bool): True si la liste à été récupérée, False sinon
                 - message (str): Message décrivant le résultat de l'opération
-        
+
         """
 
         try:
@@ -73,7 +73,7 @@ class ClientService:
                 return True, [], "Aucun client trouvé"
         except Exception as e:
             log_exception(e, {
-                "action":"get clients"
+                "action": "get clients"
             })
 
             return False, "Erreur lors de la récupération"
@@ -86,22 +86,26 @@ class ClientService:
                       ):
         """Met à jour les informations d'un client existant.
 
-        Cette méthode permet de modifier les données d'un client après avoir 
+        Cette méthode permet de modifier les données d'un client après avoir
         vérifié les permissions d'accès et validé les données fournies.
 
         Contrôles d'accès :
-        - Les utilisateurs du département "Commercial" ne peuvent modifier que leurs propres clients
+        - Les utilisateurs du département "Commercial" ne peuvent modifier
+        que leurs propres clients
         - Les autres départements (Gestion) peuvent modifier tous les clients
 
         Validations effectuées :
         - Vérification de l'existence du client
         - Validation du format email si fourni
-        - Vérification que le commercial_id correspond à un utilisateur commercial
+        - Vérification que le commercial_id correspond à un utilisateur
+        commercial
 
         Args:
             client_id (int): Identifiant unique du client à modifier
-            user_id (int): Identifiant de l'utilisateur effectuant la modification
-            user_departement (str): Département de l'utilisateur ("Commercial", "Gestion", etc.)
+            user_id (int): Identifiant de l'utilisateur effectuant
+            la modification
+            user_departement (str): Département de l'utilisateur
+            ("Commercial", "Gestion", etc.)
             **update_data: Données à mettre à jour. Clés possibles :
                 - fullname (str): Nom complet du client
                 - contact (str): Informations de contact
@@ -113,7 +117,7 @@ class ClientService:
             tuple: (success, message)
                 - success (bool): True si la mise à jour a réussi, False sinon
                 - message (str): Message décrivant le résultat de l'opération
-                
+
         Raises:
             Exception: En cas d'erreur lors de l'accès à la base de données
         """
@@ -147,4 +151,7 @@ class ClientService:
             else:
                 return False, "Aucun client trouvé avec cet ID"
         except Exception as e:
+            log_exception(e, {
+                "action": "update-client"
+            })
             return False, "Erreur lors de la mise à jour"

@@ -11,7 +11,7 @@ class EventDAO:
             stmt = insert(event).values(**event_data)
             result = conn.execute(stmt)
             return result
-        
+
     def update_event(self, event_id, update_data):
         with self.engine.begin() as conn:
             stmt = (

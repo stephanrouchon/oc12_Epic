@@ -36,7 +36,7 @@ exclude_lines =
 show_missing = True
 
 # Pourcentage minimum de couverture
-fail_under = 35
+fail_under = 60
 
 # Précision pour l'affichage
 precision = 1

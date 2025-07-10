@@ -14,7 +14,7 @@ def get_departement_choice():
 
 
 def get_departement_id_by_name(dept_name):
-    """Permet d'obtenir l'id par son nom 
+    """Permet d'obtenir l'id par son nom
 
     Args:
         dept_name (str): nom du département
@@ -24,7 +24,8 @@ def get_departement_id_by_name(dept_name):
     """
     departements = departement_dao.get_all_departements()
     departement_id = next(
-        (id for id, name in departements if name.lower() == dept_name.lower()), None)
+        (id for id, name in departements if
+         name.lower() == dept_name.lower()), None)
     if departement_id is None:
         return None
     return departement_id

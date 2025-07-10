@@ -5,3 +5,6 @@
 /flake-report
 /.env
 /htmlcov
+/__pycache__
+__pycache__
+/services/__pycache__

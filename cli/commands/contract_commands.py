@@ -130,7 +130,8 @@ def get_not_sign_contracts():
 @require_departement("Commercial")
 def get_contracts_not_fully_paid():
     contract_service = ContractService()
-    success, contracts, message = contract_service.get_contract_list_not_fully_paid()
+    success, contracts, message = contract_service\
+        .get_contract_list_not_fully_paid()
     if success and contracts:
         headers = ["ID", "Client", "Title",
                    "Date de création", "Signé", "Montant", "Solde"]
