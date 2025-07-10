@@ -19,6 +19,49 @@ class UserService:
                     password,
                     departement_id,
                     ):
+        """Crée un nouvel utilisateur dans le système.
+
+        Cette méthode permet de créer un compte utilisateur après avoir validé
+        les données fournies et sécurisé le mot de passe via hachage Argon2.
+        La création est automatiquement journalisée dans Sentry pour audit.
+
+        Validations effectuées :
+        - Validation du format de l'adresse email
+        - Hachage sécurisé du mot de passe avec Argon2
+        - Vérification de l'unicité des données (via contraintes DB)
+        - Validation de l'existence du département
+
+        Sécurité :
+        - Le mot de passe est haché avec Argon2 (recommandation OWASP)
+        - Journalisation automatique des créations d'utilisateurs
+        - Logging des erreurs pour monitoring et debugging
+
+        Args:
+            username (str): Nom d'utilisateur unique pour la connexion
+            employee_number (int): Numéro de matricule de l'employé
+            email (str): Adresse email valide de l'utilisateur
+            first_name (str): Prénom de l'utilisateur
+            last_name (str): Nom de famille de l'utilisateur
+            password (str): Mot de passe en clair (sera haché automatiquement)
+            departement_id (int): Identifiant du département d'affectation
+
+        Returns:
+            tuple: (success, message)
+                - success (bool): True si la création a réussi, False sinon
+                - message (str): Message décrivant le résultat de l'opération
+
+        Raises:
+            Exception: En cas d'erreur lors de l'accès à la base de données
+                      (contraintes d'unicité, erreur de connexion, etc.)
+                      Les exceptions sont automatiquement loggées via Sentry
+
+        Note:
+            - Le mot de passe est automatiquement haché avec Argon2
+            - La création est journalisée avec l'utilisateur courant comme créateur
+            - Le département doit exister dans la base de données
+            - Les contraintes d'unicité (username, email, employee_number) sont vérifiées
+            - Toutes les erreurs sont automatiquement loggées dans Sentry
+        """
 
         ph = PasswordHasher()
         hash_password = ph.hash(password)

@@ -16,7 +16,6 @@ def init_sentry():
             environment=os.getenv("ENVIRONMENT", "development"),
             release=os.getenv("RELEASE_VERSION", "1.0.0")
         )
-        print("Sentry initialisé avec succès")
     else:
         print("SENTRY_DSN non configuré dans les variables d'environnement")
 

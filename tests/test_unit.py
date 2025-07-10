@@ -1820,3 +1820,293 @@ class TestUserCommands:
         
         assert result.exit_code == 0
         assert "✅ Utilisateur créé avec succès" in result.output
+
+
+class TestContractUpdate:
+    """Tests pour la mise à jour de contrats"""
+    
+    def test_contract_update_success_commercial_own_client(self, monkeypatch):
+        """Test réussi: commercial met à jour un contrat de son client"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme commercial
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Commercial"})
+        
+        # Mock contract service
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return True, "Le contrat a été mis à jour"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--sign'])
+        
+        assert result.exit_code == 0
+        assert "Le contrat a été mis à jour" in result.output
+    
+    def test_contract_update_success_commercial_unassigned_client(self, monkeypatch):
+        """Test réussi: commercial met à jour un contrat d'un client non assigné"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme commercial
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Commercial"})
+        
+        # Mock contract service - contrat avec client non assigné
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return True, "Le contrat a été mis à jour"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--sign'])
+        
+        assert result.exit_code == 0
+        assert "Le contrat a été mis à jour" in result.output
+    
+    def test_contract_update_fail_commercial_other_client(self, monkeypatch):
+        """Test échec: commercial tente de mettre à jour un contrat d'un autre commercial"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme commercial
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Commercial"})
+        
+        # Mock contract service - contrat appartenant à un autre commercial
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return False, "Vous ne pouvez mettre à jour que les contrats de vos clients. Ce contrat appartient à un client assigné à un autre commercial (ID: 2)"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--sign'])
+        
+        assert result.exit_code == 0
+        assert "Ce contrat appartient à un client assigné à un autre commercial" in result.output
+    
+    def test_contract_update_fail_contract_not_found(self, monkeypatch):
+        """Test échec: contrat inexistant"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme commercial
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Commercial"})
+        
+        # Mock contract service - contrat introuvable
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return False, "Contrat avec l'ID 999 introuvable"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '999', '--sign'])
+        
+        assert result.exit_code == 0
+        assert "Contrat avec l'ID 999 introuvable" in result.output
+    
+    def test_contract_update_gestion_user_paid_amount(self, monkeypatch):
+        """Test réussi: utilisateur gestion met à jour le montant payé"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme gestion
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Gestion"})
+        
+        # Mock contract service
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return True, "Le contrat a été mis à jour"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--paid-amount', '1000.50'])
+        
+        assert result.exit_code == 0
+        assert "Le contrat a été mis à jour" in result.output
+    
+    def test_contract_update_fail_paid_amount_too_high(self, monkeypatch):
+        """Test échec: montant payé supérieur au montant du contrat"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme gestion
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Gestion"})
+        
+        # Mock contract service
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return False, "Le montant payé (5000€) ne doit pas être supérieur au montant du contrat (2000€)"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--paid-amount', '5000'])
+        
+        assert result.exit_code == 0
+        assert "ne doit pas être supérieur au montant du contrat" in result.output
+    
+    def test_contract_update_fail_no_user_logged_in(self, monkeypatch):
+        """Test échec: aucun utilisateur connecté"""
+        runner = CliRunner()
+        
+        # Mock pas d'utilisateur connecté
+        def mock_get_current_user_info():
+            return None
+        
+        monkeypatch.setattr("services.auth_service.get_current_user_info", mock_get_current_user_info)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--sign'])
+        
+        assert result.exit_code == 0
+        assert "Vous n'etes pas connectés" in result.output
+    
+    def test_contract_update_fail_no_data_to_update(self, monkeypatch):
+        """Test échec: aucune donnée à mettre à jour"""
+        runner = CliRunner()
+        
+        # Mock user authentifié
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Commercial"})
+        
+        # Mock contract service
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return False, "Aucune donnée à mettre à jour"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1'])
+        
+        assert result.exit_code == 0
+        assert "Aucune donnée à mettre à jour" in result.output
+    
+    def test_contract_update_with_both_sign_and_paid_amount(self, monkeypatch):
+        """Test réussi: mise à jour avec signature et montant payé"""
+        runner = CliRunner()
+        
+        # Mock user authentifié comme gestion
+        mock_authenticated_user(monkeypatch, {"user_id": 1, "departement": "Gestion"})
+        
+        # Mock contract service
+        def mock_update_contract(self, contract_id, user_id, user_departement, sign=None, paid_amount=None):
+            return True, "Le contrat a été mis à jour"
+        
+        monkeypatch.setattr("services.contract_services.ContractService.update_contract", mock_update_contract)
+        
+        result = runner.invoke(contract, ['update', '--contract-id', '1', '--sign', '--paid-amount', '1500'])
+        
+        assert result.exit_code == 0
+        assert "Le contrat a été mis à jour" in result.output
+
+
+class TestContractServiceUpdate:
+    """Tests pour les services de mise à jour de contrats"""
+    
+    def test_contract_service_update_assigns_commercial_to_unassigned_client(self, monkeypatch):
+        """Test: assignation automatique d'un commercial à un client non assigné lors de la signature"""
+        from services.contract_services import ContractService
+        
+        # Mock contract avec client non assigné
+        class MockContract:
+            def __init__(self):
+                self.id = 1
+                self.client_id = 1
+                self.commercial_id = None  # Client non assigné
+                self.status = False
+                self.amount = 1000.0
+                self.paid_amount = 0.0
+        
+        # Mock client
+        class MockClient:
+            def __init__(self):
+                self.id = 1
+                self.fullname = "Test Client"
+        
+        # Mock DAOs
+        def mock_get_contract_by_id(self, contract_id):
+            return MockContract()
+        
+        def mock_get_client_by_id(self, client_id):
+            return MockClient()
+        
+        def mock_update_contract(self, contract_id, update_data):
+            return 1  # 1 row affected
+        
+        def mock_update_client(self, client_id, update_data):
+            return 1  # 1 row affected
+        
+        # Mock Sentry logging
+        def mock_log_contract_signature(*args, **kwargs):
+            pass
+        
+        def mock_get_current_user_info():
+            return {"user_id": 1, "username": "test_commercial"}
+        
+        monkeypatch.setattr("database.dao.contract_dao.ContractDAO.get_contract_by_id", mock_get_contract_by_id)
+        monkeypatch.setattr("database.dao.client_dao.ClientDAO.get_client_by_id", mock_get_client_by_id)
+        monkeypatch.setattr("database.dao.contract_dao.ContractDAO.update_contract", mock_update_contract)
+        monkeypatch.setattr("database.dao.client_dao.ClientDAO.update_client", mock_update_client)
+        monkeypatch.setattr("services.sentry_service.log_contract_signature", mock_log_contract_signature)
+        monkeypatch.setattr("services.auth_service.get_current_user_info", mock_get_current_user_info)
+        
+        service = ContractService()
+        success, message = service.update_contract(
+            contract_id=1,
+            user_id=1,
+            user_departement="Commercial",
+            sign=True,
+            paid_amount=None
+        )
+        
+        assert success == True
+        assert message == "Le contrat a été mis à jour"
+    
+    def test_contract_service_update_permission_denied_wrong_commercial(self, monkeypatch):
+        """Test: refus d'accès pour un commercial qui n'est pas assigné au client"""
+        from services.contract_services import ContractService
+        
+        # Mock contract avec client assigné à un autre commercial
+        class MockContract:
+            def __init__(self):
+                self.id = 1
+                self.client_id = 1
+                self.commercial_id = 2  # Assigné à un autre commercial
+                self.status = False
+                self.amount = 1000.0
+                self.paid_amount = 0.0
+        
+        # Mock DAOs
+        def mock_get_contract_by_id(self, contract_id):
+            return MockContract()
+        
+        monkeypatch.setattr("database.dao.contract_dao.ContractDAO.get_contract_by_id", mock_get_contract_by_id)
+        
+        service = ContractService()
+        success, message = service.update_contract(
+            contract_id=1,
+            user_id=1,  # Commercial ID 1 tente d'accéder au contrat du commercial ID 2
+            user_departement="Commercial",
+            sign=True,
+            paid_amount=None
+        )
+        
+        assert success == False
+        assert "Ce contrat appartient à un client assigné à un autre commercial" in message
+    
+    def test_contract_service_update_paid_amount_validation(self, monkeypatch):
+        """Test: validation du montant payé"""
+        from services.contract_services import ContractService
+        
+        # Mock contract
+        class MockContract:
+            def __init__(self):
+                self.id = 1
+                self.client_id = 1
+                self.commercial_id = 1
+                self.status = False
+                self.amount = 1000.0
+                self.paid_amount = 0.0
+        
+        # Mock DAOs
+        def mock_get_contract_by_id(self, contract_id):
+            return MockContract()
+        
+        monkeypatch.setattr("database.dao.contract_dao.ContractDAO.get_contract_by_id", mock_get_contract_by_id)
+        
+        service = ContractService()
+        success, message = service.update_contract(
+            contract_id=1,
+            user_id=1,
+            user_departement="Gestion",
+            sign=False,
+            paid_amount=1500.0  # Montant supérieur au montant du contrat
+        )
+        
+        assert success == False
+        assert "ne doit pas être supérieur au montant du contrat" in message

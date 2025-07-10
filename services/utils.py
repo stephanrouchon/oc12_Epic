@@ -4,6 +4,7 @@ import click
 
 
 def is_valid_email(email):
+    """Verifie que la saisie d'un email est au format attendu"""
     # Expression régulière simple pour valider un email
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None

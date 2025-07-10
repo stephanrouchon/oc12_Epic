@@ -21,6 +21,16 @@ class AuthService:
         self.departement_dao = DepartementDAO(engine)
 
     def login(self, session, username, password):
+        """_summary_
+
+        Args:
+            session (_type_): _description_
+            username (_type_): n
+            password (_type_): password
+
+        Returns:
+            _type_: creation d'un token
+        """
 
         result = self.user_dao.select_user(session, username)
 
@@ -50,6 +60,7 @@ class AuthService:
             return False, None, "Erreur lors de la création du token"
 
     def logout(self):
+        """deconnecte l'utilisateur en supprimant le token"""
         try:
             if os.path.exists(".token"):
                 os.remove(".token")

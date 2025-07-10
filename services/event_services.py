@@ -19,6 +19,47 @@ class EventService:
                      location,
                      notes,
                      support_id):
+        """Crée un nouvel événement associé à un contrat signé.
+
+        Cette méthode permet de créer un événement après avoir vérifié que le contrat
+        existe, qu'il est signé, et que les données fournies sont valides.
+        Un événement ne peut être créé que sur un contrat ayant le statut "signé".
+
+        Validations effectuées :
+        - Vérification de l'existence du contrat
+        - Vérification que le contrat est signé (status = True)
+        - Validation que le support_id correspond à un utilisateur du département Support
+        - Toutes les données obligatoires sont présentes
+
+        Règles métier :
+        - Un événement ne peut être créé que sur un contrat signé
+        - Le support_id peut être None (assignation ultérieure possible)
+        - Si un support_id est fourni, il doit correspondre à un membre de l'équipe Support
+
+        Args:
+            contract_id (int): Identifiant du contrat auquel associer l'événement
+            start_date (datetime): Date et heure de début de l'événement
+            attendees (int): Nombre de participants attendus
+            location (str): Lieu où se déroulera l'événement
+            notes (str): Notes ou description de l'événement
+            support_id (int, optional): Identifiant du contact support assigné.
+                                      Peut être None pour une assignation ultérieure.
+
+        Returns:
+            tuple: (success, message)
+                - success (bool): True si la création a réussi, False sinon
+                - message (str): Message décrivant le résultat de l'opération
+
+        Raises:
+            Exception: En cas d'erreur lors de l'accès à la base de données
+                      (les exceptions sont loggées via Sentry)
+
+        Note:
+            - Le contrat doit exister et être signé avant la création de l'événement
+            - Si support_id est None, l'événement sera créé sans assignation
+            - Les erreurs sont automatiquement loggées dans Sentry
+            - La validation du support_id est optionnelle (peut être None)
+        """
 
         if not self.contract_dao.exists(contract_id):
             return False, "le contrat n'existe pas"
@@ -54,6 +95,49 @@ class EventService:
     def update_event(self,
                      event_id,
                      **kwargs):
+        """Met à jour les informations d'un événement existant.
+
+        Cette méthode permet de modifier les données d'un événement après avoir 
+        vérifié les permissions d'accès et validé les données fournies.
+        L'authentification de l'utilisateur est vérifiée automatiquement.
+
+        Contrôles d'accès :
+        - Les utilisateurs du département "Support" ne peuvent modifier que les événements qui leur sont attribués
+        - Les autres départements (Gestion) peuvent modifier tous les événements
+        - Authentification requise via get_current_user_info()
+
+        Validations effectuées :
+        - Vérification de l'existence de l'événement
+        - Validation du format des dates (start_date, end_date)
+        - Validation du nombre de participants (entier positif)
+        - Vérification que le support_contact_id correspond à un utilisateur support
+        - Filtrage des données vides (None ou chaîne vide)
+
+        Args:
+            event_id (int): Identifiant unique de l'événement à modifier
+            **kwargs: Données à mettre à jour. Clés possibles :
+                - start_date (datetime): Date et heure de début de l'événement
+                - end_date (datetime): Date et heure de fin de l'événement
+                - attendees (int): Nombre de participants (entier positif)
+                - location (str): Lieu de l'événement
+                - notes (str): Notes ou description de l'événement
+                - support_contact_id (int): ID du contact support assigné (sera vérifié)
+
+        Returns:
+            tuple: (success, message)
+                - success (bool): True si la mise à jour a réussi, False sinon
+                - message (str): Message décrivant le résultat de l'opération
+
+        Raises:
+            Exception: En cas d'erreur lors de l'accès à la base de données
+                      (les exceptions sont loggées via Sentry)
+
+        Note:
+            - Seuls les champs fournis dans kwargs seront mis à jour
+            - Les valeurs None ou chaînes vides sont ignorées
+            - L'utilisateur doit être authentifié pour utiliser cette méthode
+            - Les erreurs sont automatiquement loggées dans Sentry
+        """
 
         # Récupérer les informations de l'utilisateur courant
         current_user = get_current_user_info()
@@ -121,7 +205,15 @@ class EventService:
             return False, f"Erreur lors de la mise à jour de l'événement : {str(e)}"
 
     def get_events_by_support_contact_id(self):
-        """Récupère les événements attribués à l'utilisateur support connecté"""
+        """Récupère les événements attribués à l'utilisateur support connecté
+        
+        Returns:
+            tupple:
+                   bool: True si la liste a bien été récupérée, False sinon
+                   array: Liste des évenements (vide si erreur)
+                   message:  message du résultat de l'opération
+        
+        """
         
         user = get_current_user_info()
         if not user:

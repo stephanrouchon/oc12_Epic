@@ -21,7 +21,7 @@ class ClientDAO:
                 .where(client.c.id == client_id)
             )
 
-            result = conn.execute(stmt)
+            result = conn.execute(stmt).fetchone()
             return result
 
     def exists(self, client_id):
