@@ -38,26 +38,6 @@ Tests end-to-end des workflows complets :
 
 ## Exécution des Tests
 
-### Méthode Simple
-```bash
-# Tous les tests
-python run_tests.py
-
-# Tests unitaires seulement
-python run_tests.py --type unit
-
-# Tests des services seulement
-python run_tests.py --type services
-
-# Avec couverture de code
-python run_tests.py --coverage
-
-# Mode verbeux
-python run_tests.py --verbose
-```
-
-### Méthode Pytest Directe
-```bash
 # Tous les tests
 pytest
 
