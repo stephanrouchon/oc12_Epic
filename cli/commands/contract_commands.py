@@ -127,7 +127,7 @@ def get_not_sign_contracts():
 
 
 @contract.command(name="contracts-not-paid")
-@require_departement("Commercial")
+@require_departement("Commercial","Gestion")
 def get_contracts_not_fully_paid():
     contract_service = ContractService()
     success, contracts, message = contract_service\

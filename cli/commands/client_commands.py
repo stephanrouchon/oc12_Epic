@@ -103,6 +103,7 @@ def update(client_id, fullname, email, phone_number, commercial_id):
     client_service = ClientService()
     success, message = client_service.update_client(
         client_id=client_id,
+        user_id=user.get("user_id"),
         user_departement=user.get("departement", ""),
         **update_data
     )
