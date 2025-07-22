@@ -264,3 +264,17 @@ class EventService:
                 "action": "get_events_by_support_contact_id"
             })
             return False, [], f"Erreur lors de la récupération : {str(e)}"
+
+    def get_event_list(self):
+        try:
+            events = self.event_dao.get_all_events()
+            if events:
+                return True, events, "evenements récupérés"
+            else:
+                return True, [], "Aucun événements trouvés"
+        except Exception as e:
+
+            log_exception(e, {
+                "action": "get_event_list",
+                "events": events
+            })

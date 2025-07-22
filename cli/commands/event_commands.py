@@ -2,7 +2,7 @@ import click
 from datetime import datetime
 from services.event_services import EventService
 from services.auth_service import (
-    require_departement,
+    require_departement, require_auth
 )
 
 
@@ -192,6 +192,25 @@ def get_assign_events_by_support_contact_id():
     event_service = EventService()
     success, events, message = event_service.get_events_by_support_contact_id()
 
+    if success:
+        if events:
+            for event in events:
+                print(f"Evenement ID: {event.id} "
+                      f"date de début: {event.start_date}"
+                      f"Date de fin : {event.end_date}"
+                      f"nombre de personnes : {event.attendees}"
+                      f"Lieu: {event.location}")
+        else:
+            click.echo("Aucun événément affecté")
+    else:
+        click.echo(message)
+
+
+@event.command(name="list")
+@require_auth
+def get_events_list():
+    event_service = EventService()
+    success, events, message = event_service.get_event_list()
     if success:
         if events:
             for event in events:
