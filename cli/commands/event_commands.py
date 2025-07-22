@@ -3,6 +3,7 @@ from datetime import datetime
 from services.event_services import EventService
 from services.auth_service import (
     require_departement, require_auth
+    require_departement, require_auth
 )
 
 
