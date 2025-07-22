@@ -36,6 +36,10 @@ def create(contract_id,
            notes,
            support_id):
 
+    # Convert empty string to None for optional support_id
+    if support_id == "":
+        support_id = None
+
     event_service = EventService()
     success, message = event_service.create_event(
         contract_id=contract_id,
