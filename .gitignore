@@ -9,3 +9,6 @@
 __pycache__
 /services/__pycache__
 /SECURITY_SQL.md
+/cli/commands/__pycache__
+/cli/__pycache__
+/tests/__pycache__
