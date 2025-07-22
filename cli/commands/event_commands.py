@@ -205,6 +205,7 @@ def get_assign_events_by_support_contact_id():
     else:
         click.echo(message)
 
+
 @event.command(name="list")
 @require_auth
 def get_events():
